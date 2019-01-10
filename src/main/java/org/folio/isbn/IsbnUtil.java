@@ -1,50 +1,49 @@
 package org.folio.isbn;
 
+import org.apache.commons.validator.routines.checkdigit.CheckDigitException;
+import org.apache.commons.validator.routines.checkdigit.ISBN10CheckDigit;
+
 /**
  * Class with utility methods for working with ISBN number
  */
-public class IsbnUtil {
+public final class IsbnUtil {
 
   private IsbnUtil() {
   }
 
   /**
-   * Validate ten-digit ISBN
+   * Convert an ISBN-13 code to an ISBN-10 code if possible.
+   * <p>
+   * This method requires a valid ISBN-13 with NO formatting
+   * characters.
    *
-   * @param number - ten-digit ISBN
-   * @return - is input number is valid for ten-digit ISBN format
+   * @param isbn13 The ISBN-13 code to convert
+   * @return A converted ISBN-10 code or <code>null</code>
+   * if the ISBN-13 code is not valid or does not have an ISBN-10 code.
+   * @throws IllegalArgumentException if the input is not 0 or 13 characters long
+   * or contains a character that is not a digit.
+   * @see org.apache.commons.validator.routines.ISBNValidator#convertToISBN13(String)
    */
-  public static boolean isValidTenDigitNumber(String number) {
-    return false;
-  }
+  static public String convertToISBN10(String isbn13) {
+    if (isbn13 == null) {
+      return null;
+    }
 
-  /**
-   * Validate thirteen-digit ISBN
-   *
-   * @param number - thirteen-digit ISBN
-   * @return - is input number is valid for thirteen-digit ISBN format
-   */
-  public static boolean isValidThirteenDigitNumber(String number) {
-    return false;
-  }
+    String input = isbn13.trim();
+    if (input.length() != 13) {
+      throw new IllegalArgumentException("Invalid length " + input.length() + " for '" + input + "'");
+    }
 
-  /**
-   * Convert from ten-digit ISBN to the thirteen-digit ISBN
-   *
-   * @param number - valid ten-digit ISBN
-   * @return - thirteen-digit ISBN
-   */
-  public static String convertToThirteenDigitNumber(String number) {
-    return "";
-  }
+    if (! input.startsWith("978")) {
+      return null;
+    }
 
-  /**
-   * Convert from thirteen-digit ISBN to the ten-digit ISBN
-   *
-   * @param number - valid thirteen-digit ISBN
-   * @return - ten-digit ISBN
-   */
-  public static String convertToTenDigitNumber(String number) {
-    return "";
+    // drop "978" and the original check digit
+    String isbn10 = input.substring(3, 12);
+    try {
+      return isbn10 + ISBN10CheckDigit.ISBN10_CHECK_DIGIT.calculate(isbn10);
+    } catch (CheckDigitException e) {
+      throw new IllegalArgumentException("Check digit error for '" + input + "' - " + e.getMessage());
+    }
   }
 }
